@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workshop — Reference Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0b1120;
+    --navy2:   #111827;
+    --navy3:   #1a2540;
+    --gold:    #c9a84c;
+    --gold2:   #e8c96a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --border:  rgba(201,168,76,0.18);
+    --text:    #d8dde8;
+    --muted:   #6b7a99;
+    --white:   #f0f2f7;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── PROGRESS ── */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    background: rgba(11,17,32,0.92);
+    border-bottom: 1px solid var(--border);
+    z-index: 90;
+    backdrop-filter: blur(12px);
+  }
+  #topbar .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--gold); letter-spacing: 0.5px;
+  }
+  #topbar .counter {
+    font-size: 12px; font-weight: 500;
+    color: var(--muted); letter-spacing: 2px;
+  }
+
+  /* ── DECK ── */
+  #deck { width: 100vw; height: 100vh; position: relative; }
+
+  /* ── SLIDE ── */
+  .slide {
+    position: absolute; inset: 0;
+    display: flex;
+    padding: 52px 0 60px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease;
+  }
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  /* ── TWO-COLUMN LAYOUT ── */
+  .col-text {
+    flex: 1;
+    padding: 48px 52px 40px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    border-right: 1px solid var(--border);
+  }
+  .col-visual {
+    width: 340px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 32px;
+    background: var(--navy2);
+  }
+
+  /* ── CENTERED SLIDE (title, agenda) ── */
+  .slide-center .col-text {
+    border-right: none;
+    align-items: flex-start;
+    justify-content: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .slide-center .col-visual { display: none; }
+
+  /* ── SCROLLBAR ── */
+  .col-text::-webkit-scrollbar { width: 3px; }
+  .col-text::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* ── SECTION LABEL ── */
+  .label {
+    font-size: 10px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── HEADINGS ── */
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 4.5vw, 56px);
+    font-weight: 700; line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 20px;
+  }
+  h1 span { color: var(--gold); }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 2.8vw, 36px);
+    font-weight: 600; line-height: 1.2;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+  h2 span { color: var(--gold); }
+
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--gold); margin-bottom: 8px;
+  }
+
+  .intro-text {
+    font-size: 16px; font-weight: 300;
+    color: #9aa3b8; line-height: 1.75;
+    max-width: 560px; margin-bottom: 28px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+    margin: 20px 0;
+  }
+
+  /* ── BODY TEXT ── */
+  p {
+    font-size: 14px; font-weight: 400;
+    line-height: 1.75; color: #8a95ad;
+    margin-bottom: 12px;
+  }
+  p strong { color: var(--text); font-weight: 600; }
+
+  /* ── LIST ── */
+  ul.clean {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 20px;
+  }
+  ul.clean li {
+    font-size: 14px; line-height: 1.65;
+    color: #8a95ad;
+    padding-left: 16px;
+    position: relative;
+  }
+  ul.clean li::before {
+    content: '';
+    position: absolute; left: 0; top: 9px;
+    width: 5px; height: 1px;
+    background: var(--gold);
+  }
+  ul.clean li strong { color: var(--text); font-weight: 500; }
+
+  /* ── NUMBERED LIST ── */
+  ol.clean {
+    list-style: none;
+    counter-reset: item;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  ol.clean li {
+    counter-increment: item;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  ol.clean li::before {
+    content: counter(item, decimal-leading-zero);
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 600;
+    color: var(--gold); opacity: 0.6;
+    flex-shrink: 0; width: 28px; line-height: 1.4;
+  }
+  ol.clean li .li-body { font-size: 14px; line-height: 1.65; color: #8a95ad; }
+  ol.clean li .li-body strong { color: var(--text); font-weight: 500; }
+
+  /* ── QUOTE ── */
+  .quote {
+    border-left: 2px solid var(--gold);
+    padding: 14px 20px;
+    margin: 20px 0;
+    font-size: 15px; font-style: italic;
+    color: #9aa3b8; line-height: 1.7;
+    background: var(--gold-dim);
+    border-radius: 0 6px 6px 0;
+  }
+  .quote cite {
+    display: block; margin-top: 8px;
+    font-size: 11px; font-style: normal;
+    font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--gold);
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #060b16;
+    border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 6px;
+    padding: 18px 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px; line-height: 1.75;
+    color: #8ab4c4;
+    position: relative;
+    margin-top: 8px;
+  }
+  .code-block .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--gold);
+    padding: 3px 10px; border-radius: 4px;
+    font-size: 10px; letter-spacing: 1px;
+    font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .code-block .copy-btn:hover {
+    background: var(--gold-dim); border-color: var(--gold);
+  }
+
+  /* ── SMALL CARDS (agenda) ── */
+  .agenda-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-top: 8px;
+  }
+  .agenda-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--navy2);
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .agenda-item:hover { border-color: var(--gold); }
+  .agenda-item .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 600;
+    color: var(--gold); opacity: 0.5;
+    flex-shrink: 0; width: 20px;
+  }
+  .agenda-item .txt {
+    font-size: 13px; color: #8a95ad; line-height: 1.5;
+    font-weight: 400;
+  }
+
+  /* ── COMPARISON COLUMNS ── */
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px; margin-top: 8px;
+  }
+  .compare-col {
+    padding: 16px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--navy2);
+  }
+  .compare-col .tool-name {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-col ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .compare-col ul li {
+    font-size: 12px; color: #7a859a; line-height: 1.5;
+    padding-left: 12px; position: relative;
+  }
+  .compare-col ul li::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 4px; height: 1px; background: var(--muted);
+  }
+  .highlight-col { border-color: rgba(201,168,76,0.35) !important; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--navy2);
+  }
+  .step .step-n {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    flex-shrink: 0;
+  }
+  .step .step-body strong { font-size: 13px; color: var(--text); font-weight: 500; display: block; margin-bottom: 3px; }
+  .step .step-body span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── TAKEAWAYS ── */
+  .takeaway-list { display: flex; flex-direction: column; gap: 10px; }
+  .takeaway-item {
+    display: flex; gap: 18px; align-items: flex-start;
+    padding: 14px 18px;
+    border-left: 2px solid transparent;
+    border-bottom: 1px solid var(--border);
+    transition: border-left-color 0.2s;
+  }
+  .takeaway-item:hover { border-left-color: var(--gold); }
+  .takeaway-item .t-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--gold); opacity: 0.3; flex-shrink: 0;
+    line-height: 1;
+  }
+  .takeaway-item .t-text strong { font-size: 14px; font-weight: 500; color: var(--text); display: block; margin-bottom: 4px; }
+  .takeaway-item .t-text span { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ── ACTION ITEMS ── */
+  .action-list { display: flex; flex-direction: column; gap: 8px; }
+  .action-item {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 12px 16px; border-radius: 5px;
+    background: var(--navy2); border: 1px solid var(--border);
+  }
+  .action-item .a-period {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--gold); text-transform: uppercase;
+    flex-shrink: 0; width: 70px; padding-top: 2px;
+  }
+  .action-item .a-text { font-size: 13px; color: #8a95ad; line-height: 1.55; }
+  .action-item .a-text strong { color: var(--text); font-weight: 500; }
+
+  /* ── VISUAL PANEL elements ── */
+  .visual-logo {
+    width: 72px; height: 72px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 14px;
+  }
+  .visual-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 600; color: var(--white);
+    text-align: center; margin-bottom: 8px;
+  }
+  .visual-sub {
+    font-size: 12px; color: var(--muted);
+    text-align: center; line-height: 1.6;
+    max-width: 220px;
+  }
+  .visual-divider {
+    width: 40px; height: 1px;
+    background: var(--gold); opacity: 0.4;
+    margin: 16px auto;
+  }
+  .visual-pill {
+    display: inline-block;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--gold); background: var(--gold-dim);
+    margin: 3px;
+  }
+
+  /* ── TOOL LINKS ── */
+  .tool-links { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .tool-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 5px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .tool-link:hover { border-color: var(--gold); background: var(--gold-dim); }
+  .tool-link .tl-icon { font-size: 18px; flex-shrink: 0; width: 26px; text-align: center; }
+  .tool-link .tl-info strong { display: block; font-size: 13px; font-weight: 500; color: var(--text); }
+  .tool-link .tl-info span { font-size: 11px; color: var(--muted); }
+
+  /* ── STAT BOX ── */
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+  .stat-box {
+    flex: 1; min-width: 100px;
+    padding: 16px 14px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--navy2);
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 700; color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+  /* ── NAVIGATION ── */
+  #nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    border-top: 1px solid var(--border);
+    background: rgba(11,17,32,0.95);
+    z-index: 90;
+    backdrop-filter: blur(12px);
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px; height: 36px; border-radius: 4px;
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  #dots {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  .dot.active { background: var(--gold); width: 20px; border-radius: 3px; }
+
+  #key-hint {
+    font-size: 11px; color: var(--muted); letter-spacing: 1px;
+  }
+
+  @media (max-width: 768px) {
+    .col-visual { display: none; }
+    .col-text { padding: 32px 28px 32px; border-right: none; }
+    #topbar, #nav { padding: 0 20px; }
+    .compare-row { grid-template-columns: 1fr; }
+    .agenda-grid { grid-template-columns: 1fr; }
+    #key-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="topbar">
+  <div class="logo">AI Workshop — Reference Notes</div>
+  <div class="counter" id="counter">01 / 13</div>
+</div>
+
+<div id="deck">
+
+  <!-- ═══════════════════════ 1. TITLE ═══════════════════════ -->
+  <div class="slide slide-center active">
+    <div class="col-text">
+      <div class="label">Generative AI Bootcamp · Vaibhav Sisinty</div>
+      <h1>AI Workshop<br><span>Reference Notes</span></h1>
+      <p class="intro-text">
+        A clean summary of the Generative AI Bootcamp — covering core concepts,
+        tools demonstrated, and key frameworks to revisit anytime.
+      </p>
+      <div class="divider"></div>
+      <div class="quote">
+        "Give us one weekend of yours and you will know more about Generative AI applications
+        than 95% of the world."
+        <cite>— Vaibhav Sisinty, Outskill</cite>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Day bootcamp</div></div>
+        <div class="stat-box"><div class="stat-num">20h</div><div class="stat-label">Live training</div></div>
+        <div class="stat-box"><div class="stat-num">15+</div><div class="stat-label">Tools covered</div></div>
+        <div class="stat-box"><div class="stat-num">2h</div><div class="stat-label">Daily time saved</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 2. AGENDA ═══════════════════════ -->
+  <div class="slide slide-center">
+    <div class="col-text">
+      <div class="label">What's Covered</div>
+      <h2>Workshop <span>Agenda</span></h2>
+      <p>Thirteen sections drawn directly from the workshop sessions.</p>
+      <div class="agenda-grid">
+        <div class="agenda-item"><div class="num">01</div><div class="txt">Workshop Overview & Context</div></div>
+        <div class="agenda-item"><div class="num">02</div><div class="txt">The 5 Layers of Context Framework</div></div>
+        <div class="agenda-item"><div class="num">03</div><div class="txt">GPT-5 vs Claude vs Gemini</div></div>
+        <div class="agenda-item"><div class="num">04</div><div class="txt">The Master Prompt Template</div></div>
+        <div class="agenda-item"><div class="num">05</div><div class="txt">NotebookLM — Research Assistant</div></div>
+        <div class="agenda-item"><div class="num">06</div><div class="txt">Stitch — No-Code App Builder</div></div>
+        <div class="agenda-item"><div class="num">07</div><div class="txt">Perplexity — Research Engine</div></div>
+        <div class="agenda-item"><div class="num">08</div><div class="txt">Claude Skills & Cowork Mode</div></div>
+        <div class="agenda-item"><div class="num">09</div><div class="txt">Day 2 — Bots, Agents & MCPs</div></div>
+        <div class="agenda-item"><div class="num">10</div><div class="txt">Complete Tools Reference</div></div>
+        <div class="agenda-item"><div class="num">11</div><div class="txt">Data Analysis with AI</div></div>
+        <div class="agenda-item"><div class="num">12</div><div class="txt">Key Takeaways</div></div>
+        <div class="agenda-item"><div class="num">13</div><div class="txt">Your 30/60/90-Day Action Plan</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 3. WORKSHOP OVERVIEW ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Session Overview</div>
+      <h2>About the <span>Workshop</span></h2>
+      <p>
+        The Generative AI Bootcamp is a three-day intensive run monthly by Vaibhav Sisinty, founder of Outskill.
+        The goal is to move people from occasionally experimenting with AI to using it consistently in their actual work
+        to save a minimum of two hours every day.
+      </p>
+      <div class="divider"></div>
+      <h3>Schedule</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-body">
+            <strong>Day 1 — Friday Evening (3 hours)</strong>
+            <span>April 24 or May 22 · 7:30–10:30 PM EST · AI foundations, prompt engineering, core tools</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-body">
+            <strong>Day 2 — Saturday (9 hours)</strong>
+            <span>April 25 or May 23 · 10 AM–7 PM EST · AI bots, agents, workflows, image and video generation</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-body">
+            <strong>Day 3 — Sunday (9 hours)</strong>
+            <span>April 26 or May 24 · 10 AM–7 PM EST · Advanced agents, org-wide AI rollout, live project work</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <p>
+        Batches run every month. Missed a date? You can enrol now and defer to the next batch.
+        The session is not recorded — attendance is required.
+      </p>
+    </div>
+    <div class="col-visual">
+      <div class="visual-logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="18" stroke="#c9a84c" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="20" cy="20" r="10" stroke="#c9a84c" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="20" cy="20" r="3" fill="#c9a84c"/>
+        </svg>
+      </div>
+      <div class="visual-title">Outskill</div>
+      <div class="visual-sub">India's fastest-growing AI upskilling platform · 400% year-on-year growth</div>
+      <div class="visual-divider"></div>
+      <span class="visual-pill">100K+ newsletter subscribers</span>
+      <span class="visual-pill">Monthly cohorts</span>
+      <span class="visual-pill">Live · Not recorded</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 4. 5 LAYERS ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Core Framework</div>
+      <h2>The 5 Layers <span>of Context</span></h2>
+      <p>
+        The single most important concept in the workshop. Every great AI output starts with giving
+        the model all five layers of context. Miss one and the quality drops noticeably.
+      </p>
+      <div class="divider"></div>
+      <ol class="clean">
+        <li>
+          <div class="li-body">
+            <strong>Identity Context</strong> — Who is the AI acting as?<br>
+            Define the role, expertise level, and tone. "You are an expert financial analyst who writes for senior executives."
+          </div>
+        </li>
+        <li>
+          <div class="li-body">
+            <strong>World Context</strong> — What does the AI need to know about your situation?<br>
+            Describe your audience, business, and the environment the output will live in.
+          </div>
+        </li>
+        <li>
+          <div class="li-body">
+            <strong>Task Context</strong> — What exactly needs to happen?<br>
+            Be specific. Not "write an email" but "write a 150-word email inviting my 10K subscribers to a free live workshop."
+          </div>
+        </li>
+        <li>
+          <div class="li-body">
+            <strong>Example Context</strong> — What does great output look like? What does bad output look like?<br>
+            Showing both good and bad examples is the single biggest upgrade to output quality.
+          </div>
+        </li>
+        <li>
+          <div class="li-body">
+            <strong>Constraint Context</strong> — What are the rules?<br>
+            Word limit, tone restrictions, things to avoid, format requirements. Make them explicit.
+          </div>
+        </li>
+      </ol>
+    </div>
+    <div class="col-visual">
+      <div class="visual-title" style="margin-bottom: 4px;">5 Layers</div>
+      <div class="visual-sub" style="margin-bottom: 20px;">Stack all five every time you write a prompt</div>
+      <div class="visual-divider"></div>
+      <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);"><span style="color: var(--gold); font-weight: 600;">01</span> &nbsp;Identity</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);"><span style="color: var(--gold); font-weight: 600;">02</span> &nbsp;World</div>
+        <div style="padding: 10px 14px; border: 1px solid rgba(201,168,76,0.4); border-radius: 5px; background: rgba(201,168,76,0.06); font-size: 12px; color: var(--text);"><span style="color: var(--gold); font-weight: 600;">03</span> &nbsp;Task</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);"><span style="color: var(--gold); font-weight: 600;">04</span> &nbsp;Example</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);"><span style="color: var(--gold); font-weight: 600;">05</span> &nbsp;Constraint</div>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">"The more context you give, the better the output."</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 5. MODEL COMPARISON ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">AI Models</div>
+      <h2>GPT-5 · Claude · <span>Gemini 2.5 Pro</span></h2>
+      <p>
+        Vaibhav ran the same prompt — a newsletter invitation email — through all three models live.
+        The same 5-layer prompt was used for each. The outputs were meaningfully different.
+      </p>
+      <div class="compare-row">
+        <div class="compare-col">
+          <div class="tool-name" style="color: #10a37f;">GPT-5</div>
+          <ul>
+            <li>Best for speed and creative tasks</li>
+            <li>Strong tool integrations</li>
+            <li>Warm, friendly output tone</li>
+            <li>Great for quick first drafts</li>
+            <li>Subject used: "Save 2 hours daily with AI"</li>
+          </ul>
+        </div>
+        <div class="compare-col highlight-col">
+          <div class="tool-name" style="color: var(--gold);">Claude — Recommended</div>
+          <ul>
+            <li>Wins for depth and professional work</li>
+            <li>Cleaner structure and reasoning</li>
+            <li>Most reliable on long-form tasks</li>
+            <li>Community verdict: best for serious use</li>
+            <li>Subject used: "I'm teaching AI this Saturday"</li>
+          </ul>
+        </div>
+        <div class="compare-col">
+          <div class="tool-name" style="color: #4285f4;">Gemini 2.5 Pro</div>
+          <ul>
+            <li>"Show thinking" reveals its reasoning</li>
+            <li>Strong for research and analysis</li>
+            <li>Excellent Google ecosystem fit</li>
+            <li>Good for multi-modal tasks</li>
+            <li>Subject used: "An idea for your Saturday"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <p>
+        Real-time X (Twitter) sentiment from April 2026: the dominant community pattern is
+        <strong>Claude for depth/professional work</strong>, ChatGPT for speed/creativity/tools,
+        Grok for humor and real-time search. Claude is consistently described as the most reliable for serious outputs.
+      </p>
+    </div>
+    <div class="col-visual">
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <div style="padding: 16px; border: 1px solid rgba(16,163,127,0.3); border-radius: 8px; background: rgba(16,163,127,0.05);">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: #10a37f; margin-bottom: 6px;">OPENAI GPT-5</div>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.5;">chat.openai.com · Speed, creativity, broad tool support</div>
+        </div>
+        <div style="padding: 16px; border: 1px solid rgba(201,168,76,0.35); border-radius: 8px; background: rgba(201,168,76,0.06);">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 6px;">ANTHROPIC CLAUDE</div>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.5;">claude.ai · Depth, professionalism, reliability</div>
+        </div>
+        <div style="padding: 16px; border: 1px solid rgba(66,133,244,0.3); border-radius: 8px; background: rgba(66,133,244,0.05);">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: #4285f4; margin-bottom: 6px;">GOOGLE GEMINI 2.5 PRO</div>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.5;">gemini.google.com · Research, reasoning, Google integration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 6. MASTER PROMPT ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Prompt Engineering</div>
+      <h2>The Master <span>Prompt Template</span></h2>
+      <p>
+        This structure, combining all 5 layers, is the template Vaibhav uses for every AI task.
+        Copy it, fill in the brackets, and use it with any model.
+      </p>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+[Identity Context]
+You are a [ROLE] who [EXPERTISE/STYLE].
+
+[World Context]
+My [AUDIENCE] are [DESCRIPTION]. They [PAIN POINT / DESIRE].
+
+[Task Context]
+[SPECIFIC TASK — be precise and detailed].
+
+[Example Context]
+Good output looks like: [EXAMPLE OF STRONG OUTPUT].
+Bad output looks like: [EXAMPLE OF WEAK OUTPUT TO AVOID].
+
+[Constraint Context]
+Under [WORD COUNT] words. [TONE]. [FORMAT RULES]. No [THINGS TO EXCLUDE].
+      </div>
+      <div class="divider"></div>
+      <h3>Key Principles</h3>
+      <ul class="clean">
+        <li>The more specific your context, the closer the AI gets to what you actually need on the first attempt.</li>
+        <li><strong>Example Context is the most underused layer.</strong> Showing bad examples is just as valuable as showing good ones.</li>
+        <li>Save your best prompts as Claude Skills so you never have to rewrite them — just trigger them with a short command.</li>
+        <li>Vague prompts produce vague outputs. Treat writing a prompt like writing a brief to a talented contractor.</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div class="visual-title">Claude Skills</div>
+      <div class="visual-sub" style="margin-bottom: 16px;">Save any prompt workflow as a reusable "skill" — then trigger it in one line next time.</div>
+      <div class="visual-divider"></div>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Newsletter Email Writer</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">LinkedIn Post Creator</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Meeting Summary Builder</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Market Analysis Report</div>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">One word triggers the whole workflow. The skill already knows your audience, tone, and rules.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 7. NOTEBOOKLM ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Google Tool</div>
+      <h2><span>NotebookLM</span> — Research Assistant</h2>
+      <p>
+        NotebookLM lets you upload any source — PDFs, websites, YouTube videos, Google Drive docs, audio files —
+        and then chat with all of them at once. Every answer is cited back to your sources.
+      </p>
+      <div class="divider"></div>
+      <h3>What It Can Generate From Your Sources</h3>
+      <ul class="clean">
+        <li><strong>Audio Overview</strong> — a conversational podcast-style summary, useful for listening while commuting</li>
+        <li><strong>Slide Deck</strong> — auto-generated presentation from your uploaded material</li>
+        <li><strong>Mind Map</strong> — visual overview of concepts and connections across sources</li>
+        <li><strong>Reports and Flashcards</strong> — structured summaries or study cards</li>
+        <li><strong>Quiz</strong> — auto-generated questions to test your understanding</li>
+        <li><strong>Infographic and Data Table</strong> — visual formats from research data</li>
+      </ul>
+      <div class="divider"></div>
+      <h3>How Vaibhav Used It Live</h3>
+      <p>
+        Uploaded multiple sources covering AI and machine learning concepts. Used the Chat panel to ask
+        "Explain the step-by-step process of building a neural network" — got a structured,
+        multi-source cited answer in seconds. Used the Studio panel to generate an Audio Overview
+        and a Slide Deck from the same sources without any additional prompting.
+      </p>
+    </div>
+    <div class="col-visual">
+      <div style="width: 60px; height: 60px; border-radius: 12px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M8 6h16a2 2 0 012 2v16a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" stroke="#c9a84c" stroke-width="1.2" opacity="0.6"/>
+          <path d="M11 12h10M11 16h7M11 20h5" stroke="#c9a84c" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+        </svg>
+      </div>
+      <div class="visual-title">NotebookLM</div>
+      <div class="visual-sub" style="margin-bottom: 12px;">notebooklm.google.com</div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub" style="margin-bottom: 16px; text-align: left; padding: 0 4px;">
+        <strong style="color: var(--text);">Sources it accepts:</strong><br><br>
+        PDFs · Websites · YouTube · Google Drive · Audio files · Text files
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">
+        Free to use. Requires a Google account. Works best with 5–20 sources on a focused topic.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 8. STITCH ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Google Tool · Beta</div>
+      <h2><span>Stitch</span> — No-Code App Builder</h2>
+      <p>
+        Stitch is a Google product (beta) that builds web applications and landing pages from a single
+        detailed prompt. No coding is required. You describe what you want, and Stitch designs and builds it.
+      </p>
+      <div class="divider"></div>
+      <h3>What Vaibhav Built Live</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-body">
+            <strong>Wrote one detailed prompt using all 5 layers</strong>
+            <span>Specified role, audience, page sections (hero, curriculum, testimonials, pricing, FAQ, CTA), typography, and brand colours.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-body">
+            <strong>Stitch designed and built the full landing page</strong>
+            <span>Complete with Fira Sans font, dark background, lime green accent. All sections populated with real content.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-body">
+            <strong>Iterated entirely through conversation</strong>
+            <span>Changed layout, colours, and copy by typing follow-up instructions. No design software needed.</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <ul class="clean">
+        <li>Supports both App mode (internal tools) and Web mode (public-facing pages)</li>
+        <li>Connects to Google Drive — projects are saved and versioned there</li>
+        <li>The more specific your initial prompt, the less back-and-forth is required</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="width: 60px; height: 60px; border-radius: 12px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+          <path d="M5 15 L15 5 L25 15 L15 25 Z" stroke="#c9a84c" stroke-width="1.2" fill="none" opacity="0.7"/>
+          <circle cx="15" cy="15" r="4" fill="#c9a84c" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="visual-title">Stitch</div>
+      <div class="visual-sub" style="margin-bottom: 12px;">stitch.withgoogle.com</div>
+      <div class="visual-divider"></div>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Landing pages</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Internal dashboards</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Web applications</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Portfolio sites</div>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">Currently in beta. Free to access. No account creation required.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 9. PERPLEXITY ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Research Tool</div>
+      <h2><span>Perplexity</span> — The Research Engine</h2>
+      <p>
+        Perplexity searches the live web first, then synthesises the findings into a structured response.
+        Every claim is cited. This makes it far more reliable than a standard AI model for research tasks
+        where factual accuracy matters.
+      </p>
+      <div class="divider"></div>
+      <h3>What Vaibhav Demonstrated</h3>
+      <p>
+        He asked Perplexity to produce a full market entry strategy report for Outskill in Latin America.
+        The output was a consulting-grade document with nine structured sections — Executive Summary,
+        Market Landscape, Competitive Analysis, Country Prioritisation, Pricing Strategy, Go-to-Market Plan,
+        SWOT Analysis, Risk Analysis, and Strategic Recommendations. Generated in under two minutes.
+        Downloadable as PDF.
+      </p>
+      <div class="divider"></div>
+      <h3>When to Use Perplexity</h3>
+      <ul class="clean">
+        <li>Any research task where you need cited, verifiable sources</li>
+        <li>Competitor analysis and market landscape mapping</li>
+        <li>Generating structured reports you can share with others</li>
+        <li>Staying current with fast-moving news or industry trends</li>
+        <li>When you need to be confident your AI output is grounded in real data</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="width: 60px; height: 60px; border-radius: 12px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+          <circle cx="13" cy="13" r="7" stroke="#c9a84c" stroke-width="1.3" opacity="0.7"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke="#c9a84c" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+        </svg>
+      </div>
+      <div class="visual-title">Perplexity AI</div>
+      <div class="visual-sub" style="margin-bottom: 12px;">perplexity.ai</div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub" style="text-align: left; padding: 0 4px; margin-bottom: 14px;">
+        <strong style="color: var(--text);">Report structure generated live:</strong><br><br>
+        Executive Summary · Market Landscape · Competitive Analysis · Country Prioritisation · Pricing Strategy · GTM Plan · SWOT · Risk Analysis · Recommendations
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">Free tier available. Pro plan unlocks deeper research mode.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 10. CLAUDE SKILLS + COWORK ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Claude Advanced Features</div>
+      <h2>Claude <span>Skills & Cowork</span></h2>
+      <p>
+        Two features of Claude that Vaibhav demonstrated go significantly beyond basic chat —
+        Skills for saving reusable workflows, and Cowork Mode for complex multi-step tasks.
+      </p>
+      <div class="divider"></div>
+      <h3>Claude Skills</h3>
+      <p>
+        A Skill is a saved prompt workflow. You define it once — with all 5 layers of context,
+        your preferred output format, tone guidelines, and constraints — and Claude remembers it.
+        Next time you need the same task done, you reference the skill and Claude applies all your
+        rules automatically without you retyping anything.
+      </p>
+      <p>
+        Vaibhav demonstrated creating a "Newsletter Email Skill" live in Claude Code. The skill
+        defined his writing style, audience profile, what good and bad emails look like, and format rules.
+        He then used it to generate a breaking news email about OpenAI's upcoming "Spud" model — Claude
+        searched the web for current information and applied the skill format in one step.
+      </p>
+      <div class="divider"></div>
+      <h3>Cowork Mode</h3>
+      <p>
+        Claude's agentic capability. In Cowork Mode, Claude can read files, search the web,
+        run code, save outputs to Google Drive, and complete multi-step tasks autonomously.
+        Vaibhav used it to build a full AI Implementation Roadmap presentation by feeding it
+        30+ podcast episodes — it synthesised the content and produced a formatted five-slide
+        PPTX deck saved directly to his Drive.
+      </p>
+    </div>
+    <div class="col-visual">
+      <div style="width: 60px; height: 60px; border-radius: 12px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 4 C8 4 4 10 4 16 S8 28 16 28 S28 22 28 16 S24 4 16 4Z" stroke="#c9a84c" stroke-width="1.2" fill="none" opacity="0.5"/>
+          <path d="M10 16 Q13 12 16 16 Q19 20 22 16" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="visual-title">Claude (Anthropic)</div>
+      <div class="visual-sub" style="margin-bottom: 12px;">claude.ai</div>
+      <div class="visual-divider"></div>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+        <div style="padding: 10px 14px; border: 1px solid rgba(201,168,76,0.3); border-radius: 5px; background: rgba(201,168,76,0.05); font-size: 12px; color: var(--text);">Skills (saved workflows)</div>
+        <div style="padding: 10px 14px; border: 1px solid rgba(201,168,76,0.3); border-radius: 5px; background: rgba(201,168,76,0.05); font-size: 12px; color: var(--text);">Cowork Mode (agentic)</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Web search built-in</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">Google Drive output</div>
+        <div style="padding: 10px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--navy); font-size: 12px; color: var(--muted);">PPTX / Markdown export</div>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">Sonnet 4.6 and Opus 4 available. Extended thinking mode in Opus.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 11. DAY 2 — BOTS, AGENTS, MCPs ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Day 2 Content</div>
+      <h2>Bots, Agents <span>& MCPs</span></h2>
+      <p>
+        Day 2 covers how to move beyond chat-based AI into automation — building agents, connecting AI
+        to external tools, and generating visual and audio content at scale.
+      </p>
+      <div class="divider"></div>
+      <h3>Session 1 — Building AI Bots & Agents Without Code</h3>
+      <ul class="clean">
+        <li>Fine-tuning AI models for specific tasks and custom behaviour</li>
+        <li>Building personal GPTs (OpenAI) and Gemini Gems for recurring workflows</li>
+        <li>Building AI Voice Agents using VAPI — agents that can handle calls</li>
+        <li>How MCPs (Model Context Protocol) connect AI directly to your apps and data</li>
+      </ul>
+      <div class="divider"></div>
+      <h3>Session 2 — AI Workflows, Connectors & MCPs</h3>
+      <ul class="clean">
+        <li>The difference between an AI tool and an AI workflow — one does a task, the other automates a process</li>
+        <li>Using Make.com to build multi-step automated workflows without code</li>
+        <li>Connecting Claude to Gmail, Google Calendar, Notion, Slack, and CRM systems via MCP</li>
+      </ul>
+      <div class="divider"></div>
+      <h3>Session 3 — Storytelling with AI: Image & Video</h3>
+      <ul class="clean">
+        <li>Generating realistic images with KREA, maintaining consistent characters across content</li>
+        <li>Creating high-quality AI video for marketing and social media</li>
+        <li>Applying AI to branding — consistent visual identity without a designer</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div class="visual-title" style="margin-bottom: 6px;">What is an MCP?</div>
+      <div class="visual-sub" style="margin-bottom: 16px; text-align: left; padding: 0 4px;">
+        Model Context Protocol — a standard that lets AI models read from and write to external apps directly,
+        without manual copy-pasting.
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub" style="text-align: left; padding: 0 4px; margin-bottom: 14px;">
+        <strong style="color: var(--text);">Apps connectable via MCP:</strong>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%;">
+        <span class="visual-pill">Gmail</span>
+        <span class="visual-pill">Calendar</span>
+        <span class="visual-pill">Google Drive</span>
+        <span class="visual-pill">Slack</span>
+        <span class="visual-pill">Notion</span>
+        <span class="visual-pill">Asana</span>
+        <span class="visual-pill">Salesforce</span>
+        <span class="visual-pill">GitHub</span>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">Once connected, the AI can act on these apps autonomously — reading, writing, and updating without you intervening.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 12. TOOLS REFERENCE ═══════════════════════ -->
+  <div class="slide">
+    <div class="col-text">
+      <div class="label">Complete Reference</div>
+      <h2>Tools <span>Covered</span> in the Bootcamp</h2>
+      <p>
+        Every tool demonstrated across the three days. Each link goes directly to the tool.
+      </p>
+      <div class="divider"></div>
+      <h3>AI Assistants</h3>
+      <div class="tool-links" style="margin-bottom: 16px;">
+        <a href="https://claude.ai" target="_blank" class="tool-link"><div class="tl-icon">✦</div><div class="tl-info"><strong>Claude (Anthropic)</strong><span>claude.ai · Sonnet 4.6 and Opus 4 · Best for professional work</span></div></a>
+        <a href="https://chatgpt.com" target="_blank" class="tool-link"><div class="tl-icon">●</div><div class="tl-info"><strong>ChatGPT (OpenAI GPT-5)</strong><span>chatgpt.com · Best for speed, creative tasks, and tool integrations</span></div></a>
+        <a href="https://gemini.google.com" target="_blank" class="tool-link"><div class="tl-icon">◆</div><div class="tl-info"><strong>Gemini 2.5 Pro (Google)</strong><span>gemini.google.com · Best for research, reasoning, and Google Workspace</span></div></a>
+        <a href="https://perplexity.ai" target="_blank" class="tool-link"><div class="tl-icon">○</div><div class="tl-info"><strong>Perplexity AI</strong><span>perplexity.ai · Cited web research and structured reports</span></div></a>
+      </div>
+      <h3>Build & Automate</h3>
+      <div class="tool-links">
+        <a href="https://stitch.withgoogle.com" target="_blank" class="tool-link"><div class="tl-icon">◇</div><div class="tl-info"><strong>Stitch (Google)</strong><span>stitch.withgoogle.com · No-code web app and landing page builder</span></div></a>
+        <a href="https://notebooklm.google.com" target="_blank" class="tool-link"><div class="tl-icon">□</div><div class="tl-info"><strong>NotebookLM (Google)</strong><span>notebooklm.google.com · Research assistant with source uploads</span></div></a>
+        <a href="https://make.com" target="_blank" class="tool-link"><div class="tl-icon">△</div><div class="tl-info"><strong>Make.com</strong><span>make.com · No-code multi-step automation workflows</span></div></a>
+        <a href="https://vapi.ai" target="_blank" class="tool-link"><div class="tl-icon">◎</div><div class="tl-info"><strong>VAPI</strong><span>vapi.ai · Voice AI agents for inbound and outbound calls</span></div></a>
+        <a href="https://krea.ai" target="_blank" class="tool-link"><div class="tl-icon">▽</div><div class="tl-info"><strong>KREA AI</strong><span>krea.ai · Consistent AI image generation for branding</span></div></a>
+      </div>
+    </div>
+    <div class="col-visual">
+      <div class="visual-title" style="margin-bottom: 6px;">Also Mentioned</div>
+      <div class="visual-divider"></div>
+      <div class="tool-links" style="width: 100%;">
+        <a href="https://replit.com" target="_blank" class="tool-link" style="padding: 8px 12px;"><div class="tl-icon" style="font-size: 14px;">◈</div><div class="tl-info"><strong style="font-size: 12px;">Replit</strong><span style="font-size: 11px;">AI-powered coding environment</span></div></a>
+        <a href="https://lovable.dev" target="_blank" class="tool-link" style="padding: 8px 12px;"><div class="tl-icon" style="font-size: 14px;">◈</div><div class="tl-info"><strong style="font-size: 12px;">Lovable</strong><span style="font-size: 11px;">No-code full-stack app builder</span></div></a>
+        <a href="https://bolt.new" target="_blank" class="tool-link" style="padding: 8px 12px;"><div class="tl-icon" style="font-size: 14px;">◈</div><div class="tl-info"><strong style="font-size: 12px;">Bolt.new</strong><span style="font-size: 11px;">Instant web app generation</span></div></a>
+        <a href="https://lmstudio.ai" target="_blank" class="tool-link" style="padding: 8px 12px;"><div class="tl-icon" style="font-size: 14px;">◈</div><div class="tl-info"><strong style="font-size: 12px;">LM Studio</strong><span style="font-size: 11px;">Run AI models locally on your computer</span></div></a>
+        <a href="https://ollama.com" target="_blank" class="tool-link" style="padding: 8px 12px;"><div class="tl-icon" style="font-size: 14px;">◈</div><div class="tl-info"><strong style="font-size: 12px;">Ollama</strong><span style="font-size: 11px;">Local open-source AI models</span></div></a>
+      </div>
+      <div class="visual-divider"></div>
+      <div class="visual-sub">All tools above have free tiers. Most require a Google, Microsoft, or email account to sign up.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 13. KEY TAKEAWAYS ═══════════════════════ -->
+  <div class="slide slide-center">
+    <div class="col-text">
+      <div class="label">Summary</div>
+      <h2>Key <span>Takeaways</span></h2>
+      <div class="takeaway-list">
+        <div class="takeaway-item">
+          <div class="t-num">1</div>
+          <div class="t-text">
+            <strong>The 5 Layers of Context is the most important framework from the entire workshop.</strong>
+            <span>Use all five every time you prompt any AI model. The more context you provide, the better the output on the first attempt.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">2</div>
+          <div class="t-text">
+            <strong>Claude is the preferred model for serious, professional-grade outputs.</strong>
+            <span>Use GPT-5 for speed and creativity. Use Gemini for research and Google integration. Use Claude when quality and depth matter most.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">3</div>
+          <div class="t-text">
+            <strong>Save your best workflows as Claude Skills and never rewrite them.</strong>
+            <span>One-word triggers activate your full prompt, tone guidelines, and format rules. This is where the 2-hour daily saving compounds over time.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">4</div>
+          <div class="t-text">
+            <strong>NotebookLM and Perplexity replace hours of manual research.</strong>
+            <span>Upload your documents to NotebookLM to chat with them. Use Perplexity when you need cited, real-time research and structured reports.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">5</div>
+          <div class="t-text">
+            <strong>You do not need to write code to build functional applications.</strong>
+            <span>Stitch, Bolt, and Lovable can produce complete websites and apps from a single descriptive prompt.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">6</div>
+          <div class="t-text">
+            <strong>MCPs transform AI from a chat tool into an autonomous operator.</strong>
+            <span>Connect Claude to your Gmail, Drive, calendar, and CRM — then let it execute multi-step tasks without manual intervention.</span>
+          </div>
+        </div>
+        <div class="takeaway-item">
+          <div class="t-num">7</div>
+          <div class="t-text">
+            <strong>Consistent daily practice matters more than any single session.</strong>
+            <span>"The gap between people who use AI consistently and those who don't is growing every month." — Vaibhav Sisinty</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #deck -->
+
+<div id="nav">
+  <button class="nav-btn" id="btn-prev">&#8592;</button>
+  <div id="dots"></div>
+  <span id="key-hint">Use arrow keys or swipe to navigate</span>
+  <button class="nav-btn" id="btn-next">&#8594;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let cur = 0;
+
+  // Build dots
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  function updateUI() {
+    const pct = ((cur + 1) / total * 100).toFixed(1);
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('counter').textContent =
+      String(cur + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  }
+
+  function goTo(idx) {
+    if (idx === cur || idx < 0 || idx >= total) return;
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+    // reset scroll
+    const ct = slides[cur].querySelector('.col-text');
+    if (ct) ct.scrollTop = 0;
+    updateUI();
+  }
+
+  document.getElementById('btn-next').addEventListener('click', () => goTo(cur + 1));
+  document.getElementById('btn-prev').addEventListener('click', () => goTo(cur - 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') goTo(cur + 1);
+    if (e.key === 'ArrowLeft') goTo(cur - 1);
+  });
+
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
+  }, { passive: true });
+
+  function copyCode(btn) {
+    const block = btn.parentElement;
+    const text = block.innerText.replace('Copy', '').replace('Copied', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
